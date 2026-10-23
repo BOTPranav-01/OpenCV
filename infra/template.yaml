@@ -1,0 +1,76 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  LumiProbe-X: AWS Graviton Serverless Micro-Inspection & Reality Verification Infrastructure
+
+Globals:
+  Function:
+    Timeout: 30
+    MemorySize: 1024
+    Runtime: python3.11
+    Architectures:
+      - arm64  # AWS Graviton3 high-efficiency silicon
+
+Resources:
+  EvidenceBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub 'lumiprobe-evidence-${AWS::AccountId}-${AWS::Region}'
+      LifecycleConfiguration:
+        Rules:
+          - Id: ExpireAfter30Days
+            Status: Enabled
+            ExpirationInDays: 30
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  InspectionTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: LumiProbeInspections
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: inspection_id
+          AttributeType: S
+        - AttributeName: timestamp
+          AttributeType: N
+      KeySchema:
+        - AttributeName: inspection_id
+          KeyType: HASH
+        - AttributeName: timestamp
+          KeyType: RANGE
+
+  AnalysisFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: lumiprobe-highres-analyzer
+      CodeUri: ../src/
+      Handler: lumiprobe.cloud.lambda_handler.handler
+      Environment:
+        Variables:
+          EVIDENCE_BUCKET: !Ref EvidenceBucket
+          DYNAMO_TABLE: !Ref InspectionTable
+      Policies:
+        - S3CrudPolicy:
+            BucketName: !Ref EvidenceBucket
+        - DynamoDBCrudPolicy:
+            TableName: !Ref InspectionTable
+      FunctionUrlConfig:
+        AuthType: NONE
+        Cors:
+          AllowOrigins:
+            - '*'
+          AllowMethods:
+            - POST
+            - GET
+
+Outputs:
+  FunctionUrl:
+    Description: "HTTP Endpoint for LumiProbe Cloud Analytics"
+    Value: !GetAtt AnalysisFunctionUrl.FunctionUrl
+  S3Bucket:
+    Description: "Evidence S3 Bucket"
+    Value: !Ref EvidenceBucket

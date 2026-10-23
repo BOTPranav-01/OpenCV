@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>LumiProbe Calibrated Active Lamp</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; background: #000; overflow: hidden; cursor: none; }
+    #lampCanvas { width: 100vw; height: 100vh; display: block; }
+    #badge {
+      position: absolute; bottom: 20px; left: 20px; color: #fff;
+      font-family: monospace; font-size: 14px; background: rgba(0,0,0,0.7);
+      padding: 6px 12px; border-radius: 4px; pointer-events: none; opacity: 0.6;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="lampCanvas"></canvas>
+  <div id="badge">LumiProbe Lamp: <span id="patName">DARK</span> (Click for Fullscreen)</div>
+
+  <script>
+    const canvas = document.getElementById('lampCanvas');
+    const ctx = canvas.getContext('2d');
+    const badge = document.getElementById('patName');
+
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    window.addEventListener('click', () => {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      }
+    });
+
+    let currentPattern = "DARK";
+
+    function drawPattern(pid) {
+      currentPattern = pid;
+      badge.textContent = pid;
+      const w = canvas.width;
+      const h = canvas.height;
+      ctx.clearRect(0, 0, w, h);
+
+      if (pid === "DARK") {
+        ctx.fillStyle = "#000000";
+        ctx.fillRect(0, 0, w, h);
+      } else if (pid === "WHITE") {
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, w, h);
+      } else if (pid === "GRAD_LR") {
+        const grad = ctx.createLinearGradient(0, 0, w, 0);
+        grad.addColorStop(0, '#000000');
+        grad.addColorStop(1, '#ffffff');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, w, h);
+      } else if (pid === "GRAD_RL") {
+        const grad = ctx.createLinearGradient(0, 0, w, 0);
+        grad.addColorStop(0, '#ffffff');
+        grad.addColorStop(1, '#000000');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, w, h);
+      } else if (pid === "GRAD_TB") {
+        const grad = ctx.createLinearGradient(0, 0, 0, h);
+        grad.addColorStop(0, '#000000');
+        grad.addColorStop(1, '#ffffff');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, w, h);
+      } else if (pid === "GRAD_BT") {
+        const grad = ctx.createLinearGradient(0, 0, 0, h);
+        grad.addColorStop(0, '#ffffff');
+        grad.addColorStop(1, '#000000');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, w, h);
+      } else if (pid === "HALF_L") {
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, w / 2, h);
+      } else if (pid === "HALF_R") {
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(w / 2, 0, w / 2, h);
+      } else if (pid.startsWith("BAR_")) {
+        ctx.fillStyle = "#000000";
+        ctx.fillRect(0, 0, w, h);
+        ctx.save();
+        ctx.translate(w / 2, h / 2);
+        const deg = parseFloat(pid.split("_")[1]) || 0;
+        ctx.rotate((deg * Math.PI) / 180);
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(-w, -70, w * 2, 140);
+        ctx.restore();
+      } else if (pid.startsWith("SPOT_")) {
+        ctx.fillStyle = "#000000";
+        ctx.fillRect(0, 0, w, h);
+        let cx = w / 2, cy = h / 2;
+        if (pid === "SPOT_TL") { cx = w * 0.2; cy = h * 0.2; }
+        else if (pid === "SPOT_TR") { cx = w * 0.8; cy = h * 0.2; }
+        else if (pid === "SPOT_BL") { cx = w * 0.2; cy = h * 0.8; }
+        else if (pid === "SPOT_BR") { cx = w * 0.8; cy = h * 0.8; }
+        const rad = Math.min(w, h) * 0.35;
+        const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, rad);
+        grad.addColorStop(0, '#ffffff');
+        grad.addColorStop(1, '#000000');
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(cx, cy, rad, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    // Connect to WebSocket to synchronize light pattern in real time
+    const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
+    const wsUrl = `${proto}//${window.location.host}/ws/stream`;
+    function connectWS() {
+      const ws = new WebSocket(wsUrl);
+      ws.onmessage = (evt) => {
+        try {
+          const data = JSON.parse(evt.data);
+          if (data.pattern_id && data.pattern_id !== currentPattern) {
+            drawPattern(data.pattern_id);
+          }
+        } catch(e) {}
+      };
+      ws.onclose = () => setTimeout(connectWS, 1500);
+    }
+    connectWS();
+  </script>
+</body>
+</html>

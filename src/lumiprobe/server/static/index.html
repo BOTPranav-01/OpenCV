@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LumiProbe-X | Active Photometric Reality Engine</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <style>
+    :root {
+      --bg: #07090e;
+      --card-bg: rgba(18, 24, 38, 0.75);
+      --card-border: rgba(45, 60, 90, 0.4);
+      --cyan: #00f0ff;
+      --emerald: #00ff88;
+      --amber: #ffaa00;
+      --crimson: #ff2255;
+      --text: #e2e8f0;
+      --muted: #8492a6;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace; }
+    body { background: var(--bg); color: var(--text); overflow-x: hidden; min-height: 100vh; }
+    
+    header {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 14px 28px; background: rgba(10, 14, 23, 0.9);
+      border-bottom: 1px solid var(--card-border); backdrop-filter: blur(10px);
+    }
+    .logo-group { display: flex; align-items: center; gap: 12px; }
+    .logo-pill { background: linear-gradient(135deg, var(--cyan), #0077ff); color: #000; font-weight: 800; padding: 4px 10px; border-radius: 4px; font-size: 13px; }
+    h1 { font-size: 18px; font-weight: 700; letter-spacing: 0.5px; }
+    .badge-bar { display: flex; gap: 10px; }
+    .badge { font-size: 12px; padding: 4px 10px; border-radius: 20px; background: rgba(255,255,255,0.06); border: 1px solid var(--card-border); }
+    .badge.green { border-color: var(--emerald); color: var(--emerald); }
+
+    .main-grid {
+      display: grid; grid-template-columns: 340px 1fr 360px; gap: 18px;
+      padding: 20px; max-width: 1700px; margin: 0 auto;
+    }
+    .card {
+      background: var(--card-bg); border: 1px solid var(--card-border);
+      border-radius: 12px; padding: 18px; backdrop-filter: blur(8px);
+      display: flex; flex-direction: column; gap: 14px;
+    }
+    .card-title {
+      font-size: 13px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 1px; color: var(--muted); display: flex; justify-content: space-between; align-items: center;
+    }
+
+    /* Video feed elements */
+    .viewport { width: 100%; height: 210px; background: #000; border-radius: 8px; overflow: hidden; position: relative; border: 1px solid rgba(255,255,255,0.1); }
+    .viewport img { width: 100%; height: 100%; object-fit: contain; }
+    .viewport-tag { position: absolute; top: 8px; left: 8px; background: rgba(0,0,0,0.7); font-size: 11px; padding: 3px 7px; border-radius: 4px; color: var(--cyan); }
+
+    /* Verdict Badge */
+    .verdict-banner {
+      border-radius: 8px; padding: 16px; text-align: center; font-weight: 800; font-size: 20px;
+      letter-spacing: 1px; transition: all 0.3s ease; border: 1px solid transparent;
+    }
+    .verdict-RELIEF { background: rgba(0, 255, 136, 0.15); border-color: var(--emerald); color: var(--emerald); box-shadow: 0 0 20px rgba(0,255,136,0.2); }
+    .verdict-FLAT { background: rgba(255, 34, 85, 0.15); border-color: var(--crimson); color: var(--crimson); box-shadow: 0 0 20px rgba(255,34,85,0.2); }
+    .verdict-CONTINUE, .verdict-ANALYZING { background: rgba(255, 170, 0, 0.15); border-color: var(--amber); color: var(--amber); }
+
+    /* SPRT Gauge */
+    .sprt-gauge-box { background: rgba(0,0,0,0.4); padding: 12px; border-radius: 8px; }
+    .sprt-bar-track { width: 100%; height: 12px; background: #162030; border-radius: 6px; position: relative; margin: 12px 0 6px 0; }
+    .sprt-needle { width: 4px; height: 22px; background: var(--cyan); position: absolute; top: -5px; border-radius: 2px; transform: translateX(-50%); transition: left 0.2s ease; box-shadow: 0 0 8px var(--cyan); }
+    .sprt-labels { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); }
+
+    /* 3D Viewport */
+    #threeViewport { width: 100%; height: 420px; background: #030508; border-radius: 8px; position: relative; }
+    .orbit-hint { position: absolute; bottom: 10px; right: 12px; font-size: 11px; color: rgba(255,255,255,0.4); pointer-events: none; }
+
+    /* Uncertainty Map Canvas */
+    #uncCanvas { width: 100%; height: 140px; border-radius: 6px; background: #000; }
+
+    /* Controls */
+    .btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
+    button, select {
+      background: rgba(255,255,255,0.08); border: 1px solid var(--card-border);
+      color: #fff; padding: 8px 14px; border-radius: 6px; font-size: 13px; font-weight: 600;
+      cursor: pointer; transition: all 0.2s;
+    }
+    button:hover { background: rgba(255,255,255,0.16); border-color: var(--cyan); color: var(--cyan); }
+    button.primary { background: var(--cyan); color: #000; border: none; }
+    button.primary:hover { background: #55f5ff; }
+
+    .reason-box {
+      background: rgba(0,0,0,0.5); border-left: 3px solid var(--cyan);
+      padding: 10px 14px; border-radius: 4px; font-size: 12px; line-height: 1.5; color: #b0c0d8;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="logo-group">
+      <div class="logo-pill">OPENCV 5.0</div>
+      <h1>LumiProbe-X | Active Photometric Reality Engine</h1>
+    </div>
+    <div class="badge-bar">
+      <div class="badge green" id="simBadge">Physics Engine: Ready</div>
+      <div class="badge" id="stepBadge">Step: 0</div>
+      <div class="badge" id="patternBadge">Pattern: DARK</div>
+    </div>
+  </header>
+
+  <div class="main-grid">
+
+    <!-- Column 1: Video Feeds -->
+    <div class="card">
+      <div class="card-title">Hardware / Camera Stream <span id="targetName">Coin</span></div>
+      <div class="viewport">
+        <span class="viewport-tag">Webcam / Sim Input</span>
+        <img id="rawVideo" alt="Raw Video">
+      </div>
+
+      <div class="card-title">Fronto-Parallel Metric ROI</div>
+      <div class="viewport">
+        <span class="viewport-tag">Homography Rectified (512x512)</span>
+        <img id="roiVideo" alt="Rectified ROI">
+      </div>
+
+      <div class="card-title">Active Target Selection</div>
+      <select id="targetSelect">
+        <option value="coin">Embossed 3D Coin (Real Relief)</option>
+        <option value="flat_print">Counterfeit 2D Print (Flat Spoof)</option>
+        <option value="braille">Tactile Braille Card (3D Dots)</option>
+      </select>
+
+      <div class="btn-row">
+        <button class="primary" id="btnReset">Reset Session</button>
+        <button id="btnStep">Step Once</button>
+        <button id="btnLamp" onclick="window.open('/lamp', '_blank', 'width=800,height=600')">Open Lamp</button>
+      </div>
+    </div>
+
+    <!-- Column 2: 3D Surface Relief Reconstructed Viewport -->
+    <div class="card">
+      <div class="card-title">
+        <span>Frankot-Chellappa 3D Micro-Relief Viewport</span>
+        <button id="btnExport" style="padding: 3px 8px; font-size: 11px;">Export 3D (.OBJ)</button>
+      </div>
+      <div id="threeViewport">
+        <div class="orbit-hint">Click & Drag to Orbit • Scroll to Zoom</div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+        <div>
+          <div class="card-title">Height Map Spectrum</div>
+          <div class="viewport" style="height: 120px;">
+            <img id="heightImg" alt="Height Map">
+          </div>
+        </div>
+        <div>
+          <div class="card-title">Surface Anomalies / Defects</div>
+          <div class="viewport" style="height: 120px;">
+            <img id="defectImg" alt="Defects">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Column 3: Decision Engine, SPRT & Agent Reason -->
+    <div class="card">
+      <div class="card-title">Wald SPRT Reality Verdict</div>
+      <div id="verdictBanner" class="verdict-banner verdict-ANALYZING">ANALYZING...</div>
+
+      <div class="sprt-gauge-box">
+        <div class="card-title" style="margin-bottom: 4px;">Log-Likelihood Ratio (&Lambda;)</div>
+        <div class="sprt-bar-track">
+          <div id="sprtNeedle" class="sprt-needle" style="left: 50%;"></div>
+        </div>
+        <div class="sprt-labels">
+          <span style="color: var(--crimson);">B0: FLAT (&le; -4.6)</span>
+          <span id="llrValue" style="color: var(--cyan); font-weight: 700;">&Lambda; = 0.00</span>
+          <span style="color: var(--emerald);">B1: RELIEF (&ge; +4.6)</span>
+        </div>
+      </div>
+
+      <div class="card-title">Spatial Uncertainty Map (16x16)</div>
+      <canvas id="uncCanvas" width="16" height="16"></canvas>
+
+      <div class="card-title">Active Perception Decision</div>
+      <div class="reason-box" id="reasonText">Initializing active photometric probe...</div>
+
+      <div style="font-size: 12px; color: var(--muted); display: flex; justify-content: space-between;">
+        <span>Defects Detected: <b id="defectCount" style="color: #fff;">0</b></span>
+        <span>Confidence: <b id="confValue" style="color: #fff;">0%</b></span>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // --- Three.js 3D Viewport Setup ---
+    const container = document.getElementById('threeViewport');
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x04060a);
+
+    const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 100);
+    camera.position.set(0, -2.2, 1.8);
+    camera.up.set(0, 0, 1);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    container.appendChild(renderer.domElement);
+
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+
+    // Lights
+    const dirLight = new THREE.DirectionalLight(0x00f0ff, 1.2);
+    dirLight.position.set(1, 1, 2);
+    scene.add(dirLight);
+
+    const ambLight = new THREE.AmbientLight(0xffffff, 0.4);
+    scene.add(ambLight);
+
+    // Initial 3D Plane Mesh (64x64 grid)
+    const gridSize = 64;
+    const geometry = new THREE.PlaneGeometry(2, 2, gridSize - 1, gridSize - 1);
+    const material = new THREE.MeshStandardMaterial({
+      color: 0x2277bb,
+      wireframe: false,
+      roughness: 0.3,
+      metalness: 0.5,
+      side: THREE.DoubleSide
+    });
+    const terrainMesh = new THREE.Mesh(geometry, material);
+    scene.add(terrainMesh);
+
+    // Grid wireframe helper overlay
+    const wireMat = new THREE.MeshBasicMaterial({ color: 0x00f0ff, wireframe: true, transparent: true, opacity: 0.15 });
+    const wireMesh = new THREE.Mesh(geometry, wireMat);
+    scene.add(wireMesh);
+
+    function animate() {
+      requestAnimationFrame(animate);
+      controls.update();
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    window.addEventListener('resize', () => {
+      camera.aspect = container.clientWidth / container.clientHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(container.clientWidth, container.clientHeight);
+    });
+
+    function updateTerrainMesh(grid) {
+      if (!grid || grid.length !== gridSize) return;
+      const pos = geometry.attributes.position;
+      let idx = 0;
+      for (let r = 0; r < gridSize; r++) {
+        for (let c = 0; c < gridSize; c++) {
+          pos.setZ(idx, grid[r][c] * 0.4);
+          idx++;
+        }
+      }
+      pos.needsUpdate = true;
+      geometry.computeVertexNormals();
+    }
+
+    // --- WebSocket Telemetry Stream ---
+    const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
+    const ws = new WebSocket(`${proto}//${window.location.host}/ws/stream`);
+
+    const rawVideo = document.getElementById('rawVideo');
+    const roiVideo = document.getElementById('roiVideo');
+    const heightImg = document.getElementById('heightImg');
+    const defectImg = document.getElementById('defectImg');
+
+    const verdictBanner = document.getElementById('verdictBanner');
+    const sprtNeedle = document.getElementById('sprtNeedle');
+    const llrValue = document.getElementById('llrValue');
+    const reasonText = document.getElementById('reasonText');
+    const stepBadge = document.getElementById('stepBadge');
+    const patternBadge = document.getElementById('patternBadge');
+    const simBadge = document.getElementById('simBadge');
+    const defectCount = document.getElementById('defectCount');
+    const confValue = document.getElementById('confValue');
+
+    const uncCanvas = document.getElementById('uncCanvas');
+    const uncCtx = uncCanvas.getContext('2d');
+
+    ws.onmessage = (evt) => {
+      const data = JSON.parse(evt.data);
+
+      if (data.raw_frame_b64) rawVideo.src = "data:image/jpeg;base64," + data.raw_frame_b64;
+      if (data.roi_frame_b64) roiVideo.src = "data:image/jpeg;base64," + data.roi_frame_b64;
+      if (data.height_frame_b64) heightImg.src = "data:image/jpeg;base64," + data.height_frame_b64;
+      if (data.defect_frame_b64) defectImg.src = "data:image/jpeg;base64," + data.defect_frame_b64;
+
+      // Verdict Banner
+      verdictBanner.textContent = data.verdict === "RELIEF" ? "VERIFIED 3D RELIEF \u2705" :
+                                 data.verdict === "FLAT" ? "FLAT 2D SPOOF / COPY \u274C" : "ACQUIRING EVIDENCE...";
+      verdictBanner.className = `verdict-banner verdict-${data.verdict}`;
+
+      // SPRT Gauge needle (mapping from -5 to +5 into 0% to 100%)
+      const llr = data.cumulative_llr || 0;
+      const b0 = data.lower_bound || -4.6;
+      const b1 = data.upper_bound || 4.6;
+      const pct = Math.max(0, Math.min(100, ((llr - b0) / (b1 - b0)) * 100));
+      sprtNeedle.style.left = `${pct}%`;
+      llrValue.textContent = `\u039B = ${llr.toFixed(2)}`;
+
+      // Badges & Reason
+      stepBadge.textContent = `Step: ${data.step_count}`;
+      patternBadge.textContent = `Light: ${data.pattern_id}`;
+      simBadge.textContent = data.is_simulated ? `Physics Sim (${data.target_type})` : `Webcam (Hardware Lock)`;
+      reasonText.textContent = data.reason;
+      defectCount.textContent = data.defect_count;
+      confValue.textContent = `${(data.confidence * 100).toFixed(1)}%`;
+
+      // Render 3D Mesh
+      if (data.mesh_grid && data.mesh_grid.length === gridSize) {
+        updateTerrainMesh(data.mesh_grid);
+      }
+
+      // Render 16x16 Uncertainty Heatmap
+      if (data.uncertainty_map) {
+        const uImg = uncCtx.createImageData(16, 16);
+        for (let r = 0; r < 16; r++) {
+          for (let c = 0; c < 16; c++) {
+            const u = data.uncertainty_map[r][c];
+            const pIdx = (r * 16 + c) * 4;
+            // False color: high uncertainty = bright orange/red; cooled = dark cyan
+            uImg.data[pIdx] = Math.floor(u * 255);
+            uImg.data[pIdx + 1] = Math.floor((1 - u) * 200);
+            uImg.data[pIdx + 2] = Math.floor((1 - u) * 255);
+            uImg.data[pIdx + 3] = 255;
+          }
+        }
+        uncCtx.putImageData(uImg, 0, 0);
+      }
+    };
+
+    // --- User Actions ---
+    document.getElementById('btnReset').onclick = () => {
+      fetch('/api/action', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ action: 'reset' })
+      });
+    };
+
+    document.getElementById('btnStep').onclick = () => {
+      fetch('/api/action', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ action: 'step' })
+      });
+    };
+
+    document.getElementById('targetSelect').onchange = (e) => {
+      fetch('/api/action', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ action: 'set_target', param: e.target.value })
+      });
+    };
+
+    document.getElementById('btnExport').onclick = () => {
+      window.location.href = '/api/export/obj';
+    };
+  </script>
+</body>
+</html>
