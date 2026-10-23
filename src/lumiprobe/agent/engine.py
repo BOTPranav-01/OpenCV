@@ -40,7 +40,7 @@ class InspectionEngineResult:
 class LumiProbeEngine:
     """Autonomous active photometric stereo inspection engine."""
 
-    def __init__(self, force_sim: bool = False, sim_target: str = "coin", mode: str = "surface"):
+    def __init__(self, force_sim: bool = True, sim_target: str = "coin", mode: str = "surface"):
         self.mode = mode
         self.camera = CameraDevice(force_sim=force_sim, sim_target=sim_target)
         self.window_tracker = ArucoWindowTracker()
@@ -57,9 +57,15 @@ class LumiProbeEngine:
         self.latest_height_map: np.ndarray | None = None
         self.latest_normals: np.ndarray | None = None
         self.latest_defects: DefectSummary | None = None
+        self.is_active_scanning = True
 
         # Apply initial pattern
         self.camera.set_pattern(self.current_pattern)
+
+    def set_input_source(self, source: str, target: str = "coin"):
+        """Switch input between 'sim' (physics engine) and 'webcam' (hardware)."""
+        self.camera.set_source(source, target)
+        self.reset_session(target_type=target)
 
     def reset_session(self, target_type: str | None = None, mode: str | None = None):
         """Reset inspection state for a new target."""
@@ -76,9 +82,44 @@ class LumiProbeEngine:
         self.current_pattern = "DARK"
         self.last_planned_reason = "Session reset. Capturing dark ambient baseline."
         self.camera.set_pattern(self.current_pattern)
+        self.is_active_scanning = True
+
+    def get_preview_result(self) -> InspectionEngineResult:
+        """Capture camera preview frame without altering inspection state."""
+        ret, frame = self.camera.read()
+        if not ret or frame is None:
+            frame = np.zeros((480, 640, 3), dtype=np.uint8)
+
+        sprt = self.session.latest_sprt
+        verdict = sprt.verdict.value if sprt else "ANALYZING"
+        conf = sprt.confidence if sprt else 0.0
+        llr = sprt.log_likelihood_ratio if sprt else 0.0
+        unc = sprt.uncertainty_score if sprt else 1.0
+
+        return InspectionEngineResult(
+            verdict=verdict,
+            confidence=conf,
+            cumulative_llr=llr,
+            uncertainty=unc,
+            pattern_id=self.current_pattern,
+            reason=self.last_planned_reason,
+            step_count=len(self.session.steps),
+            is_simulated=self.camera.is_simulated,
+            target_type=self.camera.sim_target,
+            raw_frame=frame,
+            rectified_roi=self.session.pattern_frames.get(self.current_pattern),
+            height_map=self.latest_height_map,
+            defect_summary=self.latest_defects,
+            uncertainty_map=self.session.uncertainty_map.tolist(),
+        )
 
     def step(self) -> InspectionEngineResult:
         """Execute one complete active perception cycle."""
+        # If inspection has already finalized, return the concluded state
+        if self.session.latest_sprt is not None and self.session.latest_sprt.verdict in (Verdict.RELIEF, Verdict.FLAT):
+            self.is_active_scanning = False
+            return self.get_preview_result()
+
         # 1. Grab camera frame under current lighting pattern
         ret, frame = self.camera.read()
         if not ret or frame is None:
@@ -180,6 +221,8 @@ class LumiProbeEngine:
         if next_action.action_type == "CHANGE_PATTERN":
             self.current_pattern = next_action.pattern_id
             self.camera.set_pattern(self.current_pattern)
+        elif next_action.action_type == "STOP":
+            self.is_active_scanning = False
 
         verdict_str = sprt_state.verdict.value if sprt_state else "ANALYZING"
         conf = sprt_state.confidence if sprt_state else 0.0

@@ -9,8 +9,8 @@
   <style>
     :root {
       --bg: #07090e;
-      --card-bg: rgba(18, 24, 38, 0.75);
-      --card-border: rgba(45, 60, 90, 0.4);
+      --card-bg: rgba(18, 24, 38, 0.85);
+      --card-border: rgba(45, 60, 90, 0.45);
       --cyan: #00f0ff;
       --emerald: #00ff88;
       --amber: #ffaa00;
@@ -23,7 +23,7 @@
     
     header {
       display: flex; justify-content: space-between; align-items: center;
-      padding: 14px 28px; background: rgba(10, 14, 23, 0.9);
+      padding: 14px 28px; background: rgba(10, 14, 23, 0.95);
       border-bottom: 1px solid var(--card-border); backdrop-filter: blur(10px);
     }
     .logo-group { display: flex; align-items: center; gap: 12px; }
@@ -32,10 +32,11 @@
     .badge-bar { display: flex; gap: 10px; }
     .badge { font-size: 12px; padding: 4px 10px; border-radius: 20px; background: rgba(255,255,255,0.06); border: 1px solid var(--card-border); }
     .badge.green { border-color: var(--emerald); color: var(--emerald); }
+    .badge.amber { border-color: var(--amber); color: var(--amber); }
 
     .main-grid {
-      display: grid; grid-template-columns: 340px 1fr 360px; gap: 18px;
-      padding: 20px; max-width: 1700px; margin: 0 auto;
+      display: grid; grid-template-columns: 350px 1fr 370px; gap: 18px;
+      padding: 20px; max-width: 1750px; margin: 0 auto;
     }
     .card {
       background: var(--card-bg); border: 1px solid var(--card-border);
@@ -47,47 +48,52 @@
       letter-spacing: 1px; color: var(--muted); display: flex; justify-content: space-between; align-items: center;
     }
 
-    /* Video feed elements */
+    /* Video feeds */
     .viewport { width: 100%; height: 210px; background: #000; border-radius: 8px; overflow: hidden; position: relative; border: 1px solid rgba(255,255,255,0.1); }
     .viewport img { width: 100%; height: 100%; object-fit: contain; }
-    .viewport-tag { position: absolute; top: 8px; left: 8px; background: rgba(0,0,0,0.7); font-size: 11px; padding: 3px 7px; border-radius: 4px; color: var(--cyan); }
+    .viewport-tag { position: absolute; top: 8px; left: 8px; background: rgba(0,0,0,0.75); font-size: 11px; padding: 3px 8px; border-radius: 4px; color: var(--cyan); }
 
-    /* Verdict Badge */
+    /* Verdict Banner */
     .verdict-banner {
       border-radius: 8px; padding: 16px; text-align: center; font-weight: 800; font-size: 20px;
       letter-spacing: 1px; transition: all 0.3s ease; border: 1px solid transparent;
     }
-    .verdict-RELIEF { background: rgba(0, 255, 136, 0.15); border-color: var(--emerald); color: var(--emerald); box-shadow: 0 0 20px rgba(0,255,136,0.2); }
-    .verdict-FLAT { background: rgba(255, 34, 85, 0.15); border-color: var(--crimson); color: var(--crimson); box-shadow: 0 0 20px rgba(255,34,85,0.2); }
+    .verdict-RELIEF { background: rgba(0, 255, 136, 0.15); border-color: var(--emerald); color: var(--emerald); box-shadow: 0 0 20px rgba(0,255,136,0.25); }
+    .verdict-FLAT { background: rgba(255, 34, 85, 0.15); border-color: var(--crimson); color: var(--crimson); box-shadow: 0 0 20px rgba(255,34,85,0.25); }
     .verdict-CONTINUE, .verdict-ANALYZING { background: rgba(255, 170, 0, 0.15); border-color: var(--amber); color: var(--amber); }
 
     /* SPRT Gauge */
-    .sprt-gauge-box { background: rgba(0,0,0,0.4); padding: 12px; border-radius: 8px; }
-    .sprt-bar-track { width: 100%; height: 12px; background: #162030; border-radius: 6px; position: relative; margin: 12px 0 6px 0; }
-    .sprt-needle { width: 4px; height: 22px; background: var(--cyan); position: absolute; top: -5px; border-radius: 2px; transform: translateX(-50%); transition: left 0.2s ease; box-shadow: 0 0 8px var(--cyan); }
+    .sprt-gauge-box { background: rgba(0,0,0,0.45); padding: 14px; border-radius: 8px; }
+    .sprt-bar-track { width: 100%; height: 14px; background: #162030; border-radius: 7px; position: relative; margin: 12px 0 8px 0; }
+    .sprt-needle { width: 6px; height: 26px; background: var(--cyan); position: absolute; top: -6px; border-radius: 3px; transform: translateX(-50%); transition: left 0.25s ease; box-shadow: 0 0 10px var(--cyan); }
     .sprt-labels { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); }
 
     /* 3D Viewport */
-    #threeViewport { width: 100%; height: 420px; background: #030508; border-radius: 8px; position: relative; }
-    .orbit-hint { position: absolute; bottom: 10px; right: 12px; font-size: 11px; color: rgba(255,255,255,0.4); pointer-events: none; }
+    #threeViewport { width: 100%; height: 420px; background: #030508; border-radius: 8px; position: relative; overflow: hidden; }
+    .orbit-hint { position: absolute; bottom: 10px; right: 12px; font-size: 11px; color: rgba(255,255,255,0.5); pointer-events: none; background: rgba(0,0,0,0.6); padding: 3px 8px; border-radius: 4px; }
 
     /* Uncertainty Map Canvas */
-    #uncCanvas { width: 100%; height: 140px; border-radius: 6px; background: #000; }
+    #uncCanvas { width: 100%; height: 130px; border-radius: 6px; background: #000; border: 1px solid var(--card-border); }
 
     /* Controls */
     .btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
     button, select {
       background: rgba(255,255,255,0.08); border: 1px solid var(--card-border);
-      color: #fff; padding: 8px 14px; border-radius: 6px; font-size: 13px; font-weight: 600;
+      color: #fff; padding: 9px 14px; border-radius: 6px; font-size: 13px; font-weight: 600;
       cursor: pointer; transition: all 0.2s;
     }
-    button:hover { background: rgba(255,255,255,0.16); border-color: var(--cyan); color: var(--cyan); }
-    button.primary { background: var(--cyan); color: #000; border: none; }
+    button:hover { background: rgba(255,255,255,0.18); border-color: var(--cyan); color: var(--cyan); }
+    button.primary { background: var(--cyan); color: #000; border: none; font-weight: 700; }
     button.primary:hover { background: #55f5ff; }
 
     .reason-box {
-      background: rgba(0,0,0,0.5); border-left: 3px solid var(--cyan);
-      padding: 10px 14px; border-radius: 4px; font-size: 12px; line-height: 1.5; color: #b0c0d8;
+      background: rgba(0,0,0,0.55); border-left: 3px solid var(--cyan);
+      padding: 12px 14px; border-radius: 4px; font-size: 12px; line-height: 1.5; color: #b0c0d8; min-height: 54px;
+    }
+
+    .info-banner {
+      font-size: 11px; color: var(--muted); background: rgba(0, 240, 255, 0.08);
+      border: 1px dashed rgba(0, 240, 255, 0.3); border-radius: 6px; padding: 8px 10px; line-height: 1.4;
     }
   </style>
 </head>
@@ -99,47 +105,57 @@
       <h1>LumiProbe-X | Active Photometric Reality Engine</h1>
     </div>
     <div class="badge-bar">
-      <div class="badge green" id="simBadge">Physics Engine: Ready</div>
+      <div class="badge green" id="simBadge">Physics Simulator: Active</div>
       <div class="badge" id="stepBadge">Step: 0</div>
-      <div class="badge" id="patternBadge">Pattern: DARK</div>
+      <div class="badge" id="patternBadge">Light: DARK</div>
     </div>
   </header>
 
   <div class="main-grid">
 
-    <!-- Column 1: Video Feeds -->
+    <!-- Column 1: Video Feeds & Input Selection -->
     <div class="card">
-      <div class="card-title">Hardware / Camera Stream <span id="targetName">Coin</span></div>
+      <div class="card-title">1. Input Mode & Source</div>
+      <select id="sourceSelect">
+        <option value="sim">🎮 Physics Simulator (Built-in Demo)</option>
+        <option value="webcam">📷 Physical Hardware Webcam (Desk Capture)</option>
+      </select>
+
+      <div class="card-title" id="targetLabel">Target Object</div>
+      <select id="targetSelect">
+        <option value="coin">🪙 Embossed 3D Coin (Real Relief)</option>
+        <option value="flat_print">📄 Counterfeit 2D Print (Flat Spoof)</option>
+        <option value="braille">⠃ Tactile Braille Card (3D Dots)</option>
+      </select>
+
+      <div class="info-banner" id="modeNotice">
+        💡 <b>Simulator Mode:</b> Automatically models 3D surface physics under screen light ramps. Change the dropdown to test different targets!
+      </div>
+
+      <div class="card-title">Camera / Input Stream</div>
       <div class="viewport">
-        <span class="viewport-tag">Webcam / Sim Input</span>
+        <span class="viewport-tag" id="rawTag">Input Stream</span>
         <img id="rawVideo" alt="Raw Video">
       </div>
 
-      <div class="card-title">Fronto-Parallel Metric ROI</div>
+      <div class="card-title">Rectified Fronto-Parallel ROI</div>
       <div class="viewport">
         <span class="viewport-tag">Homography Rectified (512x512)</span>
         <img id="roiVideo" alt="Rectified ROI">
       </div>
 
-      <div class="card-title">Active Target Selection</div>
-      <select id="targetSelect">
-        <option value="coin">Embossed 3D Coin (Real Relief)</option>
-        <option value="flat_print">Counterfeit 2D Print (Flat Spoof)</option>
-        <option value="braille">Tactile Braille Card (3D Dots)</option>
-      </select>
-
       <div class="btn-row">
-        <button class="primary" id="btnReset">Reset Session</button>
-        <button id="btnStep">Step Once</button>
-        <button id="btnLamp" onclick="window.open('/lamp', '_blank', 'width=800,height=600')">Open Lamp</button>
+        <button class="primary" id="btnReset">🔄 Reset & Scan</button>
+        <button id="btnStep">⏭️ Step Once</button>
+        <button id="btnLamp" onclick="window.open('/lamp', '_blank', 'width=800,height=600')">💡 Open Lamp</button>
       </div>
     </div>
 
     <!-- Column 2: 3D Surface Relief Reconstructed Viewport -->
     <div class="card">
       <div class="card-title">
-        <span>Frankot-Chellappa 3D Micro-Relief Viewport</span>
-        <button id="btnExport" style="padding: 3px 8px; font-size: 11px;">Export 3D (.OBJ)</button>
+        <span>2. Frankot-Chellappa 3D Micro-Relief Viewport</span>
+        <button id="btnExport" style="padding: 4px 10px; font-size: 11px;">💾 Export 3D (.OBJ)</button>
       </div>
       <div id="threeViewport">
         <div class="orbit-hint">Click & Drag to Orbit • Scroll to Zoom</div>
@@ -148,13 +164,13 @@
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
         <div>
           <div class="card-title">Height Map Spectrum</div>
-          <div class="viewport" style="height: 120px;">
+          <div class="viewport" style="height: 125px;">
             <img id="heightImg" alt="Height Map">
           </div>
         </div>
         <div>
           <div class="card-title">Surface Anomalies / Defects</div>
-          <div class="viewport" style="height: 120px;">
+          <div class="viewport" style="height: 125px;">
             <img id="defectImg" alt="Defects">
           </div>
         </div>
@@ -163,28 +179,28 @@
 
     <!-- Column 3: Decision Engine, SPRT & Agent Reason -->
     <div class="card">
-      <div class="card-title">Wald SPRT Reality Verdict</div>
-      <div id="verdictBanner" class="verdict-banner verdict-ANALYZING">ANALYZING...</div>
+      <div class="card-title">3. Wald SPRT Reality Verdict</div>
+      <div id="verdictBanner" class="verdict-banner verdict-ANALYZING">ACQUIRING EVIDENCE...</div>
 
       <div class="sprt-gauge-box">
-        <div class="card-title" style="margin-bottom: 4px;">Log-Likelihood Ratio (&Lambda;)</div>
+        <div class="card-title" style="margin-bottom: 4px;">Sequential Probability Ratio (&Lambda;)</div>
         <div class="sprt-bar-track">
           <div id="sprtNeedle" class="sprt-needle" style="left: 50%;"></div>
         </div>
         <div class="sprt-labels">
-          <span style="color: var(--crimson);">B0: FLAT (&le; -4.6)</span>
-          <span id="llrValue" style="color: var(--cyan); font-weight: 700;">&Lambda; = 0.00</span>
-          <span style="color: var(--emerald);">B1: RELIEF (&ge; +4.6)</span>
+          <span style="color: var(--crimson); font-weight: 700;">FLAT SPOOF (&le; -4.6)</span>
+          <span id="llrValue" style="color: var(--cyan); font-weight: 800;">&Lambda; = 0.00</span>
+          <span style="color: var(--emerald); font-weight: 700;">3D RELIEF (&ge; +4.6)</span>
         </div>
       </div>
 
       <div class="card-title">Spatial Uncertainty Map (16x16)</div>
       <canvas id="uncCanvas" width="16" height="16"></canvas>
 
-      <div class="card-title">Active Perception Decision</div>
+      <div class="card-title">Active Perception Reasoning</div>
       <div class="reason-box" id="reasonText">Initializing active photometric probe...</div>
 
-      <div style="font-size: 12px; color: var(--muted); display: flex; justify-content: space-between;">
+      <div style="font-size: 12px; color: var(--muted); display: flex; justify-content: space-between; padding-top: 4px;">
         <span>Defects Detected: <b id="defectCount" style="color: #fff;">0</b></span>
         <span>Confidence: <b id="confValue" style="color: #fff;">0%</b></span>
       </div>
@@ -210,28 +226,28 @@
     controls.enableDamping = true;
 
     // Lights
-    const dirLight = new THREE.DirectionalLight(0x00f0ff, 1.2);
+    const dirLight = new THREE.DirectionalLight(0x00f0ff, 1.3);
     dirLight.position.set(1, 1, 2);
     scene.add(dirLight);
 
-    const ambLight = new THREE.AmbientLight(0xffffff, 0.4);
+    const ambLight = new THREE.AmbientLight(0xffffff, 0.45);
     scene.add(ambLight);
 
-    // Initial 3D Plane Mesh (64x64 grid)
+    // 3D Terrain Plane Mesh (64x64 grid)
     const gridSize = 64;
     const geometry = new THREE.PlaneGeometry(2, 2, gridSize - 1, gridSize - 1);
     const material = new THREE.MeshStandardMaterial({
       color: 0x2277bb,
       wireframe: false,
-      roughness: 0.3,
-      metalness: 0.5,
+      roughness: 0.35,
+      metalness: 0.45,
       side: THREE.DoubleSide
     });
     const terrainMesh = new THREE.Mesh(geometry, material);
     scene.add(terrainMesh);
 
-    // Grid wireframe helper overlay
-    const wireMat = new THREE.MeshBasicMaterial({ color: 0x00f0ff, wireframe: true, transparent: true, opacity: 0.15 });
+    // Overlay wireframe
+    const wireMat = new THREE.MeshBasicMaterial({ color: 0x00f0ff, wireframe: true, transparent: true, opacity: 0.18 });
     const wireMesh = new THREE.Mesh(geometry, wireMat);
     scene.add(wireMesh);
 
@@ -280,6 +296,9 @@
     const simBadge = document.getElementById('simBadge');
     const defectCount = document.getElementById('defectCount');
     const confValue = document.getElementById('confValue');
+    const sourceSelect = document.getElementById('sourceSelect');
+    const targetSelect = document.getElementById('targetSelect');
+    const modeNotice = document.getElementById('modeNotice');
 
     const uncCanvas = document.getElementById('uncCanvas');
     const uncCtx = uncCanvas.getContext('2d');
@@ -293,11 +312,18 @@
       if (data.defect_frame_b64) defectImg.src = "data:image/jpeg;base64," + data.defect_frame_b64;
 
       // Verdict Banner
-      verdictBanner.textContent = data.verdict === "RELIEF" ? "VERIFIED 3D RELIEF \u2705" :
-                                 data.verdict === "FLAT" ? "FLAT 2D SPOOF / COPY \u274C" : "ACQUIRING EVIDENCE...";
-      verdictBanner.className = `verdict-banner verdict-${data.verdict}`;
+      if (data.verdict === "RELIEF") {
+        verdictBanner.textContent = "VERIFIED 3D RELIEF \u2705";
+        verdictBanner.className = "verdict-banner verdict-RELIEF";
+      } else if (data.verdict === "FLAT") {
+        verdictBanner.textContent = "FLAT 2D SPOOF / COPY \u274C";
+        verdictBanner.className = "verdict-banner verdict-FLAT";
+      } else {
+        verdictBanner.textContent = "ACQUIRING EVIDENCE...";
+        verdictBanner.className = "verdict-banner verdict-ANALYZING";
+      }
 
-      // SPRT Gauge needle (mapping from -5 to +5 into 0% to 100%)
+      // SPRT Gauge needle (mapping from -4.6 to +4.6 into 0% to 100%)
       const llr = data.cumulative_llr || 0;
       const b0 = data.lower_bound || -4.6;
       const b1 = data.upper_bound || 4.6;
@@ -308,12 +334,13 @@
       // Badges & Reason
       stepBadge.textContent = `Step: ${data.step_count}`;
       patternBadge.textContent = `Light: ${data.pattern_id}`;
-      simBadge.textContent = data.is_simulated ? `Physics Sim (${data.target_type})` : `Webcam (Hardware Lock)`;
+      simBadge.textContent = data.is_simulated ? `Physics Sim (${data.target_type})` : `Webcam (Live Hardware)`;
+      simBadge.className = data.is_simulated ? 'badge green' : 'badge amber';
       reasonText.textContent = data.reason;
       defectCount.textContent = data.defect_count;
       confValue.textContent = `${(data.confidence * 100).toFixed(1)}%`;
 
-      // Render 3D Mesh
+      // Update 3D Mesh
       if (data.mesh_grid && data.mesh_grid.length === gridSize) {
         updateTerrainMesh(data.mesh_grid);
       }
@@ -325,7 +352,6 @@
           for (let c = 0; c < 16; c++) {
             const u = data.uncertainty_map[r][c];
             const pIdx = (r * 16 + c) * 4;
-            // False color: high uncertainty = bright orange/red; cooled = dark cyan
             uImg.data[pIdx] = Math.floor(u * 255);
             uImg.data[pIdx + 1] = Math.floor((1 - u) * 200);
             uImg.data[pIdx + 2] = Math.floor((1 - u) * 255);
@@ -337,28 +363,36 @@
     };
 
     // --- User Actions ---
-    document.getElementById('btnReset').onclick = () => {
-      fetch('/api/action', {
+    function postAction(action, param) {
+      return fetch('/api/action', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ action: 'reset' })
+        body: JSON.stringify({ action, param })
       });
+    }
+
+    document.getElementById('btnReset').onclick = () => {
+      postAction('reset');
     };
 
     document.getElementById('btnStep').onclick = () => {
-      fetch('/api/action', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ action: 'step' })
-      });
+      postAction('step');
     };
 
-    document.getElementById('targetSelect').onchange = (e) => {
-      fetch('/api/action', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ action: 'set_target', param: e.target.value })
-      });
+    sourceSelect.onchange = (e) => {
+      const src = e.target.value;
+      if (src === 'webcam') {
+        modeNotice.innerHTML = "📷 <b>Physical Webcam Active:</b> Place your currency note/coin in front of your laptop keyboard under the screen. Open the Lamp window on your screen to project directional lighting!";
+        targetSelect.disabled = true;
+      } else {
+        modeNotice.innerHTML = "💡 <b>Simulator Active:</b> Simulating physical 3D surface photometric stereo. Select any target from the dropdown to test!";
+        targetSelect.disabled = false;
+      }
+      postAction('set_source', src);
+    };
+
+    targetSelect.onchange = (e) => {
+      postAction('set_target', e.target.value);
     };
 
     document.getElementById('btnExport').onclick = () => {
